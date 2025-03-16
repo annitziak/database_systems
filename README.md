@@ -12,16 +12,16 @@ We then recursively apply push Down Single-Table Conditions using the `SELECT` o
 The logic is also detailed in inline comments inside the interpret method
 
 # Task 2: Optimizations
-**1. Selection Pushdown Optimization**
+**Selection Pushdown Optimization**
 The goal was to filter data as early as possible to avoid processing unnecessary rows in later operations. This was the most impactful optimization especially in more complex queries. Firstly, the WHERE clause is analyzed, and conditions are extracted using QueryOptimizer.extractConditions(whereExpression).  Conditions are categorized into:
-1. Single-table conditions: Applied immediately after scanning the relevant table using SelectOperator. A list of these conditions is maintained, and when a table is read, selection is activated using only the applicable conditions. If conditions apply only to a single table, they are merged using QueryOptimizer.mergeConditions(baseTableConditions) and applied before joins.
+ 1. Single-table conditions: Applied immediately after scanning the relevant table using SelectOperator. A list of these conditions is maintained, and when a table is read, selection is activated using only the applicable conditions. If conditions apply only to a single table, they are merged using QueryOptimizer.mergeConditions(baseTableConditions) and applied before joins.
  <br>
 2. Multi-table conditions: Deferred and applied during JoinOperator.
 
 This significantly reduces the number of rows processed in joins and aggregation, eliminating unnecessary tuples early and improving overall performance.
 
 [Note: can make query plan examples]
-**2. Early Projection Optimization**
+**Early Projection Optimization**
 
 The goal was to reduce data size early by selecting only necessary columns before processing joins and filters. While this can slightly improve computation time by speeding up joins and filtering, its primary benefit is reducing memory usage during query execution. Before executing the query, we check if early projection is feasible; otherwise, projection is applied at the end (before duplicate elimination). To simplify implementation, early projection is only done when: the SELECT statement does not include SELECT *; the query does not contain aggregate functions on columns, multiple columns from different tables are not used (otherwise, filtering would need to be deferred until scanning each table and have multiple `project` operators). The feasibility check occurs when collecting all columns required for GROUP BY, ORDER BY, and JOIN to see if SELECT contains all of them. If so, early projection is applied using a ProjectOperator immediately after scanning the base table (ScanOperator). 
 

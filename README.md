@@ -40,7 +40,7 @@ This step-by-step approach ensures an optimized and structured query execution. 
 # File Organization
 1. Within the `src/main` : <br>
 `dbcatalogue`: contains dbcatalogue class <br>
-`operator` : contains the base Operator class and the seven operators supported: Select, Project, DuplicateElimination, Sum, Join, Scan, Sort <br>
+`operator` : contains the base Operator class and the seven operators supported: `Select, Project, DuplicateElimination, Sum, Join, Scan, Sort` <br>
 `query`: contains query optimizer, plan and interpreter <br>
 `visitor`: contains expression visitor to evaluate conditions <br>
 

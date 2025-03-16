@@ -1,0 +1,4 @@
+Student.B=100, Student.C=50
+Student.B=200, Student.C=50
+Student.B=100, Student.C=105
+Student.B=200, Student.C=200

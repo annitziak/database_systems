@@ -1,0 +1,3 @@
+Student.B=100, Student.A=3
+Student.B=200, Student.A=1
+Student.B=300, Student.A=6

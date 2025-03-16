@@ -1,0 +1,6 @@
+Student.D=33, Student.B=200, Student.A=1
+Student.D=44, Student.B=200, Student.A=2
+Student.D=44, Student.B=100, Student.A=3
+Student.D=11, Student.B=100, Student.A=4
+Student.D=22, Student.B=100, Student.A=5
+Student.D=11, Student.B=300, Student.A=6

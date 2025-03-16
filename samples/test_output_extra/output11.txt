@@ -1,0 +1,5 @@
+Student.C=50, Course.E=104
+Student.C=50, Course.E=107
+Student.C=105, Course.E=107
+Student.C=50, Course.E=104
+Student.C=50, Course.E=107

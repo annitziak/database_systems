@@ -12,9 +12,9 @@ We then recursively apply push Down Single-Table Conditions using the `SELECT` o
 # Task 2: Optimizations
 ## Selection Pushdown Optimization <br>
 The goal was to filter data as early as possible to avoid processing unnecessary rows in later operations. This was the most impactful optimization especially in more complex queries. Firstly, the WHERE clause is analyzed, and conditions are extracted using QueryOptimizer.extractConditions(whereExpression).  Conditions are categorized into:
- 1. Single-table conditions: Applied immediately after scanning the relevant table using SelectOperator. A list of these conditions is maintained, and when a table is read, selection is activated using only the applicable conditions. If conditions apply only to a single table, they are merged using QueryOptimizer.mergeConditions(baseTableConditions) and applied before joins.
+- Single-table conditions: Applied immediately after scanning the relevant table using SelectOperator. A list of these conditions is maintained, and when a table is read, selection is activated using only the applicable conditions. If conditions apply only to a single table, they are merged using QueryOptimizer.mergeConditions(baseTableConditions) and applied before joins.
  <br>
-2. Multi-table conditions: Deferred and applied during JoinOperator.
+- Multi-table conditions: Deferred and applied during JoinOperator.
 
 This significantly reduces the number of rows processed in joins and aggregation, eliminating unnecessary tuples early and improving overall performance.
 

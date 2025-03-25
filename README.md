@@ -25,6 +25,9 @@ The goal was to reduce data size early by selecting only necessary columns befor
 ## Join Order Optimization Using Database Statistics
 To optimize multi-table queries, join order is determined dynamically based on both correctness and estimated cost. As required by the assignment, the join order always starts with the base table from the FROM clause. Subsequent joins are chosen to form a valid chain — each new table must be connected to the already scanned tables via a join condition. This process resembles traversing a join graph. When multiple join options are available, we estimate their selectivity using precomputed statistics (min, max, distinct count, tuple count) stored in DBStatistics. For  joins, the selectivity is approximated as 1 / max(distinctCount(columnA), distinctCount(columnB)), as heurtistically we assume the equality join. The join with the highest selectivity (i.e., lowest expected output) is chosen to minimize intermediate result size. This reduces the cost of join processing, especially in queries with multiple tables, by avoiding large intermediate outputs and improving efficiency. This is valid because the join order does not matter. This minimizes intermediate result sizes and improves performance. The logic can be extended to support other condition types (e.g., range joins like A.x > B.y) by incorporating additional statistics such as value distributions or histograms, but since our data in this case were limited, this was not added. The DBstatistics class has the code to compute all these metrics. Also this can also be extended to compute the optimal order without having the contraint as using the FromItem as the base table.
 
+<br>
+Some of the optimizations being done (1 and 2) can be found here.
+
 ![DB Method](db_meth.png)
 
 

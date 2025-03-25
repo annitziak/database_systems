@@ -1,4 +1,4 @@
-Enrolled.E=101, SUM_RESULT.SUM(Enrolled.H * Enrolled.H)=5769
-Enrolled.E=102, SUM_RESULT.SUM(Enrolled.H * Enrolled.H)=9428
-Enrolled.E=103, SUM_RESULT.SUM(Enrolled.H * Enrolled.H)=8464
-Enrolled.E=104, SUM_RESULT.SUM(Enrolled.H * Enrolled.H)=729
+101, 5769
+102, 9428
+103, 8464
+104, 729

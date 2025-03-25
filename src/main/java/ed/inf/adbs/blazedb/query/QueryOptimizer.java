@@ -7,6 +7,7 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.*;
 
 import java.util.*;
+import ed.inf.adbs.blazedb.dbcatalogue.DBStatistics;
 
 public class QueryOptimizer {
 
@@ -17,11 +18,9 @@ public class QueryOptimizer {
             return false;
         }
 
-        // Check if there are any aggregate functions in SELECT clause
-        // If there are and they concern a column then early projection is NOT possible because
-        // the aggregate functions will be computed later
-        // but if they concern a constant then early projection is possible with any column
-        // here also collect the tables that are used in the query
+        // Check if there are any aggregate functions in SELECT clause, if there are
+        // early projection is NOT possible since they are computed at the end.
+
         Set<String> tables = new HashSet<>();
         for (SelectItem<?> item : selectItems) {
             if (item.toString().toUpperCase().startsWith("SUM(")) {
@@ -30,7 +29,10 @@ public class QueryOptimizer {
                 tables.add(item.toString().split("\\.")[0]);
             }
         }
-        System.out.println("Tables: " + tables);
+
+        // also if they concern more than one table, this becomes more hectic to keep track of
+        // as we need to keep a per-table list of columns to project.
+        // this was only done in the selection case, but here it doesn't seem to add too much value.
         if (tables.size() > 1) {
             return false;
         }
@@ -112,7 +114,7 @@ public class QueryOptimizer {
         return mergeConditions(tableConditions);
     }
 
-    // ✅ Extract columns from WHERE, ORDER BY, GROUP BY, HAVING
+    // Extract columns from an expression
     private static Set<String> extractColumnsFromExpression(Expression expr) {
         Set<String> columns = new HashSet<>();
 
@@ -146,7 +148,7 @@ public class QueryOptimizer {
     }
 
     // Extract tables referenced in an expression
-    private static Set<String> getReferencedTables(Expression expr) {
+    public static Set<String> getReferencedTables(Expression expr) {
         Set<String> tables = new HashSet<>();
 
         if (expr instanceof BinaryExpression) {
@@ -162,5 +164,114 @@ public class QueryOptimizer {
 
         return tables;
     }
+    // this will get join condition and return the cardinality of the join
+    // different cases of =, > , < based on the statistics : ntuples, distinct values, min, max
+
+
+
+    public static List<Join> reorderJoins(List<Join> joins, FromItem baseTable, DBStatistics dbStatistics, List<Expression> joinConditions) {
+        List<Join> orderedJoins = new ArrayList<>();
+        Set<String> scannedTables = new HashSet<>();
+        scannedTables.add(baseTable.toString());
+
+        List<Join> remainingJoins = new ArrayList<>(joins);
+
+        while (!remainingJoins.isEmpty()) {
+            List<Join> candidateJoins = new ArrayList<>();
+
+            // First: filter joins that are connected to any already scanned table
+            for (Join join : remainingJoins) {
+                String rightTable = join.getRightItem().toString();
+
+                for (Expression condition : joinConditions) {
+                    Set<String> tablesInCond = getReferencedTables(condition);
+                    if (tablesInCond.contains(rightTable) && intersects(scannedTables, tablesInCond)) {
+                        candidateJoins.add(join);
+                        break;
+                    }
+                }
+            }
+
+            Join bestJoin = null;
+
+            if (candidateJoins.size() == 1) {
+                bestJoin = candidateJoins.get(0);
+            } else if (candidateJoins.size() > 1) {
+                // Multiple join options connected to scanned tables — choose lowest selectivity
+                double bestSelectivity = Double.MAX_VALUE;
+
+                for (Join join : candidateJoins) {
+                    String rightTable = join.getRightItem().toString();
+                    for (Expression condition : joinConditions) {
+                        Set<String> tablesInCond = getReferencedTables(condition);
+                        if (tablesInCond.contains(rightTable) && scannedTables.containsAll(tablesInCond)) {
+                            double sel = estimateSelectivity(condition, dbStatistics);
+                            if (sel < bestSelectivity) {
+                                bestSelectivity = sel;
+                                bestJoin = join;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (bestJoin != null) {
+                orderedJoins.add(bestJoin);
+                scannedTables.add(bestJoin.getRightItem().toString());
+                remainingJoins.remove(bestJoin);
+            } else {
+                // Fallback (no connected join — Cartesian join case)
+                orderedJoins.add(remainingJoins.remove(0));
+            }
+        }
+
+        System.out.println("Ordered joins: " + orderedJoins);
+        return orderedJoins;
+    }
+
+
+    // helper to check if two sets intersect
+    private static boolean intersects(Set<String> scanned, Set<String> condTables) {
+        for (String t : condTables) {
+            if (scanned.contains(t)) return true;
+        }
+        return false;
+    }
+
+
+    private static double estimateSelectivity(Expression joinCondition, DBStatistics dbStatistics) {
+        String[] parts = joinCondition.toString().split("=");
+        if (parts.length != 2) return 1.0;
+
+        String leftPart = parts[0].trim();
+        String rightPart = parts[1].trim();
+
+        String[] leftParts = leftPart.split("\\.");
+        String[] rightParts = rightPart.split("\\.");
+
+        if (leftParts.length != 2 || rightParts.length != 2) return 1.0;
+
+        String leftTable = leftParts[0];
+        String leftColumn = leftParts[1];
+        String rightTable = rightParts[0];
+        String rightColumn = rightParts[1];
+
+        List<Integer> leftStats = dbStatistics.getColumnStatistics(leftTable, leftColumn);
+        List<Integer> rightStats = dbStatistics.getColumnStatistics(rightTable, rightColumn);
+
+        if (leftStats == null || rightStats == null) return 1.0;
+
+        int leftDistinct = leftStats.get(2);
+        int rightDistinct = rightStats.get(2);
+
+        return 1.0 / Math.max(leftDistinct, rightDistinct);
+    }
+
 
 }
+
+
+
+
+
+

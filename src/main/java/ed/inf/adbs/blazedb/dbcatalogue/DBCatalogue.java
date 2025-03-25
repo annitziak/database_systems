@@ -106,6 +106,12 @@ public class DBCatalogue {
     }
 
     /**
+     * Retrieves all tables in the schema.
+     */
+    public List<String> getAllTables() {
+        return new ArrayList<>(tables.keySet()); }
+
+    /**
      * Prints all loaded tables and their columns.
      * Used for debugging purposes.
      */

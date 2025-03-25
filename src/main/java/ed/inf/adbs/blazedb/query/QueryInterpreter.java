@@ -1,6 +1,7 @@
 package ed.inf.adbs.blazedb.query;
 
 import ed.inf.adbs.blazedb.dbcatalogue.DBCatalogue;
+import ed.inf.adbs.blazedb.dbcatalogue.DBStatistics;
 import ed.inf.adbs.blazedb.operator.*;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Expression;
@@ -16,10 +17,7 @@ import net.sf.jsqlparser.expression.Function;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 import static ed.inf.adbs.blazedb.query.QueryOptimizer.belongsToTable;
 
@@ -29,9 +27,11 @@ import static ed.inf.adbs.blazedb.query.QueryOptimizer.belongsToTable;
 public class QueryInterpreter {
 
     private final DBCatalogue dbCatalogue;
+    private final DBStatistics dbstatistics;
 
     public QueryInterpreter(DBCatalogue dbCatalogue) {
         this.dbCatalogue = dbCatalogue;
+        this.dbstatistics = new DBStatistics(dbCatalogue);
     }
 
     /**
@@ -55,6 +55,7 @@ public class QueryInterpreter {
 
         // MANDATORY : SCAN
         Operator rootOperator = null;
+        System.out.println("From item: " + plainSelect.getFromItem());
         rootOperator = new ScanOperator(plainSelect.getFromItem(), dbCatalogue);
 
         // Attempt to do early projection if possible
@@ -63,7 +64,6 @@ public class QueryInterpreter {
 
         // we only project the columns that are needed from the base table here
         if (earlyProjection) {
-            System.out.println("[EARLY PROJECTION] with statement " + selectItems);
             rootOperator = new ProjectOperator(rootOperator, selectItems);}
 
         // Handle WHERE
@@ -71,8 +71,6 @@ public class QueryInterpreter {
         // that satisfy these conditions. First collect all the conditions that satisfy this
         // and send them to the SelectOperator. The rest of them should still be saved
         // they will be applied after the scan of the next table in the join block
-        // Handle WHERE
-        // Handle WHERE: Extract and separate conditions
 
         //define here but check
         List<Expression> joinConditions = new ArrayList<>();
@@ -102,41 +100,77 @@ public class QueryInterpreter {
         }
 
         System.out.println(("Join conditions: " + joinConditions));
-        // Handle JOIN: joinConditions is now accessible here
+// Handle JOIN: joinConditions is now accessible here
+// if multiple join conditions are given we can make the order better
+// but making sure the first condition regards the fromItem table!
         List<Join> joins = plainSelect.getJoins();
+        System.out.println("Joins" + joins);
         if (joins != null) {
-            for (Join join : joins) {
-                // Scan the right table
+            // here make sure that the join is the one that regards the fromItem table
+            // that is already scanned, if not swap them and do this iteratively to make sure
+            // all the joins are handled
+            // reorder the join conditions
+            //List<Join> orderedJoins = QueryOptimizer.findJoinOrder(joins, plainSelect.getFromItem());
+            // find the join that contains either on the left or right the base condition
+            // and add it to the orderedJoins list first and then the next one should be the one with the
+            // same table as the previous join's right table
+            //System.out.println("Ordered joins: " + orderedJoins);
+
+            List<Join> orderedJoins;
+            if (joins.size() >= 2) {
+                orderedJoins = QueryOptimizer.reorderJoins(joins, plainSelect.getFromItem(), dbstatistics, joinConditions);
+            } else {
+                orderedJoins = joins;
+            }
+
+            Set<String> joinedTables = new HashSet<>();
+            joinedTables.add(plainSelect.getFromItem().toString());  // Base table
+
+            for (Join join : orderedJoins) {
+                String rightTableName = join.getRightItem().toString();
+                System.out.println("Processing with join table " + rightTableName);
+
                 Operator rightTable = new ScanOperator(join.getRightItem(), dbCatalogue);
 
-                // Extract conditions that ONLY belong to the right table
                 List<Expression> rightTableConditions = new ArrayList<>();
+                List<Expression> applicableJoinConditions = new ArrayList<>();
                 List<Expression> remainingJoinConditions = new ArrayList<>();
 
+                Set<String> availableNow = new HashSet<>(joinedTables);
+                availableNow.add(rightTableName);
+
                 for (Expression condition : joinConditions) {
-                    if (QueryOptimizer.isSingleTableCondition(condition, join.getRightItem())) {  // ✅ Only push if single-table
+                    Set<String> conditionTables = QueryOptimizer.getReferencedTables(condition);
+
+                    if (conditionTables.size() == 1 && conditionTables.contains(rightTableName)) {
+                        // Right-table selection pushdown
                         rightTableConditions.add(condition);
+                    } else if (availableNow.containsAll(conditionTables)) {
+                        // Both sides of condition are already scanned
+                        applicableJoinConditions.add(condition);
                     } else {
-                        remainingJoinConditions.add(condition);  // Multi-table conditions stay for join
+                        // Still waiting for a table not yet scanned
+                        remainingJoinConditions.add(condition);
                     }
                 }
 
-                // Apply selection pushdown to the right table if applicable
+                // Apply pushdown
                 if (!rightTableConditions.isEmpty()) {
-                    Expression pushedDownCondition = QueryOptimizer.mergeConditions(rightTableConditions);
-                    System.out.println("[PUSH DOWN] with statement IN RIGHT " + pushedDownCondition);
-                    rightTable = new SelectOperator(rightTable, pushedDownCondition);
+                    Expression pushedDown = QueryOptimizer.mergeConditions(rightTableConditions);
+                    System.out.println("[PUSH DOWN] with statement IN RIGHT " + pushedDown);
+                    rightTable = new SelectOperator(rightTable, pushedDown);
                 }
 
-                // Update join conditions to exclude pushed-down ones
-                System.out.println("Remaining join conditions: " + remainingJoinConditions);
-                Expression joinConditionExpr = QueryOptimizer.mergeConditions(remainingJoinConditions);
-
-                // Perform the join using only the remaining multi-table conditions
+                Expression joinConditionExpr = QueryOptimizer.mergeConditions(applicableJoinConditions);
+                System.out.println("Join condition used now: " + joinConditionExpr);
                 rootOperator = new JoinOperator(rootOperator, rightTable, joinConditionExpr);
-            }
-        }
 
+                // Update for next iteration
+                joinConditions = remainingJoinConditions;
+                joinedTables.add(rightTableName);
+            }
+
+        }
 
 
 

@@ -1,6 +1,6 @@
-Student.A=1, SUM_RESULT.SUM(Student.A * Student.B)=200
-Student.A=2, SUM_RESULT.SUM(Student.A * Student.B)=400
-Student.A=3, SUM_RESULT.SUM(Student.A * Student.B)=300
-Student.A=4, SUM_RESULT.SUM(Student.A * Student.B)=400
-Student.A=5, SUM_RESULT.SUM(Student.A * Student.B)=500
-Student.A=6, SUM_RESULT.SUM(Student.A * Student.B)=1800
+1, 200
+2, 400
+3, 300
+4, 400
+5, 500
+6, 1800

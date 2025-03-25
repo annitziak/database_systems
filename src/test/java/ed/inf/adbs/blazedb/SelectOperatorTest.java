@@ -12,12 +12,14 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.expression.LongValue;
 
+import java.io.File;
+
 public class SelectOperatorTest {
     public static void main(String[] args) {
         System.out.println("Running SelectOperator Tests...");
 
         // Set up database catalogue
-        String schemaDirectory = "samples";  // Ensure correct schema directory
+        String schemaDirectory = "samples" + File.separator + "db";  // Ensure correct schema directory
         DBCatalogue dbCatalogue = new DBCatalogue(schemaDirectory);
 
         // Define Student and Enrolled tables

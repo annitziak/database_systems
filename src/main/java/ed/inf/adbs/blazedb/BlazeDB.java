@@ -80,7 +80,7 @@ public class BlazeDB {
 			// Process all tuples produced by the root operator
 			while (tuple != null) {
 				//System.out.println("Result IN EXECUTE BLAZEDB: " + tuple);
-				writer.write(tuple.toString()); // I HAVE CHANGED THIS
+				writer.write(tuple.printValuesOnly()); // I HAVE CHANGED THIS
 				writer.newLine();
 
 				// Retrieve the next tuple

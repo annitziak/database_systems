@@ -1,2 +1,2 @@
-Student.A=1
-Student.A=4
+1
+4

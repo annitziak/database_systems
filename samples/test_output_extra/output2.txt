@@ -1,6 +1,0 @@
-Student.B=100
-Student.B=200
-Student.B=300
-Student.B=100
-Student.B=200
-Student.B=100

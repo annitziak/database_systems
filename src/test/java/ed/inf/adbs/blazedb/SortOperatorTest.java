@@ -10,6 +10,7 @@ import net.sf.jsqlparser.schema.Column;
 
 import java.io.BufferedReader;
 
+import java.io.File;
 import java.io.StringReader;
 import java.util.Arrays;
 import java.util.List;
@@ -19,7 +20,7 @@ public class SortOperatorTest {
         System.out.println("Running SortOperator Tests...");
 
         // Set up database catalogue and table
-        String schemaDirectory = "samples";
+        String schemaDirectory = "samples" + File.separator +"db";
         DBCatalogue dbCatalogue = new DBCatalogue(schemaDirectory);
         Table table = new Table("Student");
 
@@ -32,10 +33,6 @@ public class SortOperatorTest {
         // Initialize ScanOperator
         ScanOperator scanOperator = new ScanOperator(table, dbCatalogue);
 
-        // Define sorting columns (Sorting by column 'C')
-        //OrderByElement orderByElement = new OrderByElement();
-        //orderByElement.setExpression(new Column(table,"C"));
-        //List<OrderByElement> orderByElements = Arrays.asList(orderByElement);
 
         // Define sorting columns (Sorting by column 'C' first, then by 'B')
         OrderByElement orderByC = new OrderByElement();

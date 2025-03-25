@@ -1,4 +1,4 @@
-Enrolled.A=1
-Enrolled.A=2
-Enrolled.A=3
-Enrolled.A=4
+1
+2
+3
+4

@@ -1,6 +1,6 @@
-Student.A=1, Student.B=200, Student.C=50, Student.D=33, Enrolled.A=1, Enrolled.E=101, Enrolled.H=75
-Student.A=1, Student.B=200, Student.C=50, Student.D=33, Enrolled.A=1, Enrolled.E=102, Enrolled.H=82
-Student.A=1, Student.B=200, Student.C=50, Student.D=33, Enrolled.A=1, Enrolled.E=103, Enrolled.H=92
-Student.A=2, Student.B=200, Student.C=200, Student.D=44, Enrolled.A=2, Enrolled.E=101, Enrolled.H=12
-Student.A=3, Student.B=100, Student.C=105, Student.D=44, Enrolled.A=3, Enrolled.E=102, Enrolled.H=52
-Student.A=4, Student.B=100, Student.C=50, Student.D=11, Enrolled.A=4, Enrolled.E=104, Enrolled.H=27
+1, 200, 50, 33, 1, 101, 75
+1, 200, 50, 33, 1, 102, 82
+1, 200, 50, 33, 1, 103, 92
+2, 200, 200, 44, 2, 101, 12
+3, 100, 105, 44, 3, 102, 52
+4, 100, 50, 11, 4, 104, 27

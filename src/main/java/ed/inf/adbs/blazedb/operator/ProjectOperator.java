@@ -38,43 +38,40 @@ public class ProjectOperator extends Operator {
         if (selectColumns.isEmpty() || selectColumns.get(0).toString().equals("*")) {
             return initialTuple;
         }
-
+        // Iterate over the selected columns, we have to handle two cases:
+        // 1. Standard column selection (e.g., "Student.C") -> class Column
+        // 2. Aggregation functions (e.g., "SUM(Student.C)") -> class Function
         for (SelectItem<?> selectItem : selectColumns) {
             Expression expr = selectItem.getExpression();
-            System.out.println("SelectItem: " + expr);
-            System.out.println("SelectItem class: " + expr.getClass());
 
-            boolean found = false;  // ✅ Moved outside the loop to avoid shadowing
+            boolean found = false;  // keep track if the column or function was found in the tuple
 
-            // 🔹 Case 1: Column projection (Standard column selection)
+            // Case 1: Column projection (Standard column selection)
             if (expr instanceof Column) {
                 String columnName = ((Column) expr).getColumnName();
 
+                // make a new output tuple with the selected column
                 for (TupleElement element : initialTuple.getElements()) {
                     if (element.column.equals(columnName)) {
-                        System.out.println("Found column: " + element.column);
                         outputTuple.add(element.column, element.table, element.value);
-                        found = true;
-                        break;
+                        found = true; // mark the column as found
+                        break; // no need to continue searching
                     }
                 }
             }
-            // 🔹 Case 2: Aggregation functions (SUM, COUNT, etc.)
+            // Aggregation functions (SUM)
             else if (expr instanceof Function) {
+                // since we only expect SUM, we can directly check for the function name
                 String functionName = ((Function) expr).getName().toUpperCase();
-
                 if (functionName.equals("SUM")) {
                     // Retrieve the correct SUM column name
-                    System.out.println("Function found: " + expr);
                     String sumColumnName = expr.toString();  // Example: "SUM(Student.C)" or "SUM(1)"
-                    System.out.println("Sum column name: " + sumColumnName);
 
                     for (TupleElement element : initialTuple.getElements()) {
-                        System.out.println("Element: " + element.column);
                         if (element.column.equals(sumColumnName)) {
-                            outputTuple.add(sumColumnName, element.table, element.value);
-                            found = true;
-                            break;
+                            outputTuple.add(sumColumnName, element.table, element.value); // add the SUM column
+                            found = true; // mark the function as found
+                            break; // no need to continue searching
                         }
                     }
                 }

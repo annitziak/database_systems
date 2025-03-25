@@ -1,1 +1,2 @@
-SELECT Student.B FROM Student GROUP BY Student.B, Student.C;
+SELECT * FROM Student, Enrolled, Course WHERE Course.E = Enrolled.E AND Enrolled.A = Student.A;
+

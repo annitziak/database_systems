@@ -27,12 +27,11 @@ public class DuplicateEliminationOperator extends Operator {
         // Load all tuples from child operator, sort them and remove duplicates
         loadTuples();
         sortTupleList();
-        //System.out.println("Debugging sorted tuples: " + sortedTuples);
         removeDuplicates();
     }
 
     /** Load all tuples from child operator and save them in sortedTuples list.
-    // This is a blocking operation.
+    // This is a blocking operation so all of them need to be loaded before sorting.
      */
     private void loadTuples() {
         Tuple tuple;
@@ -42,7 +41,7 @@ public class DuplicateEliminationOperator extends Operator {
     }
 
     /** Sort the list of tuples based on the unique column.
-     * This is a blocking operation.
+     * We only expect integer values in the unique column.
      */
     private void sortTupleList() {
         // for each pair of tuples, compare the unique column values
@@ -77,7 +76,7 @@ public class DuplicateEliminationOperator extends Operator {
 
 
         // initialize a list for the unique tuples and a set to keep track of the values we have seen
-        // to remove duplicates
+        // if we have seen them, we don't add them to the uniqueTuples list, otherwise we do.
         List<Tuple> uniqueTuples = new ArrayList<>();
         Set<Integer> seenValues = new HashSet<>();
 
@@ -98,6 +97,7 @@ public class DuplicateEliminationOperator extends Operator {
                 seenValues.add(columnValue);
             }
         }
+        // update the sortedTuples list with the unique tuples
         sortedTuples = uniqueTuples;
     }
 

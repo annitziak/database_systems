@@ -71,6 +71,12 @@ public class SumOperator extends Operator {
         this.child.reset();
     }
 
+    /**
+     * Groups all tuples into a single group when there is no GROUP BY clause.
+     * It stores the group under an arbitrary key (empty list).
+     * We still need to store the tuples in this map to be able to compute the sum.
+     */
+
     public void groupingWithoutGroupBy() {
         List<Tuple> grouping = new ArrayList<>();
         Tuple tuple = child.getNextTuple();
@@ -88,6 +94,7 @@ public class SumOperator extends Operator {
 
     /**
      * Groups the tuples by the columns specified in the GROUP BY clause.
+     * It stores the groups under the corresponding group keys.
      */
 
     public void groupingWithGroupBy(GroupByElement groupByElement) {
@@ -104,7 +111,7 @@ public class SumOperator extends Operator {
             for (Column column : groupByColumns) {
                 System.out.println("Processing column type: " + column.getClass());
                 String columnName = column.toString();
-                Object groupValue = tuple.getGroupByValue(columnName);
+                Object groupValue = tuple.getColumnValue(columnName);
 
                 if (groupValue != null) {
                     groupKey.add(groupValue);
@@ -152,17 +159,16 @@ public class SumOperator extends Operator {
                 }
 
                 if (representativeTuple != null) {
-                    // ✅ Create a new tuple based on an existing one
+                    // Create a new tuple
                     Tuple newTuple = new Tuple();
 
-                    // ✅ Copy all original columns from the representative tuple
+                    // Copy the columns from the representative tuple
                     for (Tuple.TupleElement element : representativeTuple.getElements()) {
                         newTuple.add(element.column, element.table, element.value);
                     }
 
-                    // ✅ Add the computed sum as a new column
+                    // Add the computed sum as a new column
                     newTuple.add(sumColumnName, "SUM_RESULT", sum);
-
                     sumResults.put(key, newTuple);
                 }
             }
@@ -172,7 +178,10 @@ public class SumOperator extends Operator {
     }
 
 
-
+    /**
+     * Computes the sum of the column specified in the SUM function.
+     * We still need to find a representative tuple to preserve the information.
+     */
     public void noSum() {
         for (List<Object> key : this.groups.keySet()) {
             List<Tuple> tuples = this.groups.get(key);
@@ -191,7 +200,7 @@ public class SumOperator extends Operator {
             return (int) ((LongValue) argument).getValue();  // Case 1: sum(constant)
         } else if (argument instanceof Column) {
             String columnName = ((Column) argument).getColumnName();  // Case 2: sum(column)
-            return tuple.getGroupByValue(columnName); // Retrieve value from tuple
+            return tuple.getColumnValue(columnName); // Retrieve value from tuple
         } else if (argument instanceof BinaryExpression) {
             BinaryExpression binaryExpr = (BinaryExpression) argument;
             int leftValue = extractValueFromExpression(binaryExpr.getLeftExpression(), tuple);
@@ -203,7 +212,7 @@ public class SumOperator extends Operator {
 
 }
 
-// maybe change the gegroupby value!!
+
 
 
 

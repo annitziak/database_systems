@@ -191,6 +191,13 @@ public class BlazeDBTest {
 		BlazeDB.main(new String[] {base+"db", base + "extra_input" + File.separator + "query11.sql", base + "test_output_extra" + File.separator + "output11.txt"});
 	}
 
+	@Test
+	public void query12TestExtra() throws JSQLParserException, FileNotFoundException {
+		BlazeDB blazeDB = new BlazeDB();
+		String base = "samples" + File.separator;
+		BlazeDB.main(new String[] {base+"db", base + "extra_input" + File.separator + "query12.sql", base + "test_output_extra" + File.separator + "output12.txt"});
+	}
+
 
 }
 

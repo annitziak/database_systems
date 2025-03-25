@@ -40,7 +40,6 @@ public class SelectOperator extends Operator {
                 return null; // End of data
             }
 
-            //System.out.println("Debugging : SelectOperator: " + nextTuple);
             if (expression == null) {
                 return nextTuple; // No condition to check : return the tuple as is. Good practice.
             }
@@ -51,7 +50,6 @@ public class SelectOperator extends Operator {
 
             // Check if the tuple satisfies the condition and if so, return it.
             if (expressionVisitor.getResult()) {
-                //System.out.println("SelectOperator tuple satisfies: " + nextTuple);
                 return nextTuple;
             }
         }

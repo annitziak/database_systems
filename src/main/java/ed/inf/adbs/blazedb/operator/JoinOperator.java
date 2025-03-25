@@ -35,12 +35,12 @@ public class JoinOperator extends Operator {
 
     public boolean evaluateExpression(Tuple leftTuple, Tuple rightTuple) {
         if (expression == null) {
-            // if there is no join condition, is the same as a cross join!
+            // if there is no join condition, is the same as a CROSS JOIN.
             return true;
         }
 
         // Merge tuples before passing to ExpressionVisitor
-        // The expression visitor expects a single tuple with all attributes.
+        // The expression visitor expects a single tuple with all attributes. So we merge the tuples.
         Tuple mergedTuple = Tuple.merge(leftTuple, rightTuple);
         ExpressionVisitor expressionVisitor = new ExpressionVisitor(mergedTuple);
         this.expression.accept(expressionVisitor);
@@ -50,13 +50,16 @@ public class JoinOperator extends Operator {
     }
 
 
-    // Note to self: look at this again
     /**
      * Get the next tuple that satisfies the join condition.
      * @return The next tuple that satisfies the join condition.
      * Important here is that we are evaluating the condition by making the left tuple
      * fixed as the outer tuple and the right tuple the inner tuple which we are iterating over.
      */
+
+    // Note: currently this is a nested loop join, which can be improved.
+    // If the values were sorted first, we can have a two pointer approach, but for the
+    // purporse of this assignment, this is fine.
     @Override
     public Tuple getNextTuple() {
 
@@ -106,5 +109,9 @@ public class JoinOperator extends Operator {
         this.leftChild.reset();
         this.rightChild.reset();
         this.currentLeftTuple = null;
+    }
+
+    public String toString() {
+        return "Join[" + leftChild + ", " + rightChild + "]";
     }
 }

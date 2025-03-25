@@ -15,6 +15,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+/* This test is more extensive and considers all the cases of the SumOperator. */
+
 public class SumOperatorTest {
     public static void main(String[] args) {
         System.out.println("Running SumOperator Tests...");

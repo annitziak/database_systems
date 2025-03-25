@@ -5,12 +5,14 @@ import ed.inf.adbs.blazedb.operator.ScanOperator;
 import ed.inf.adbs.blazedb.dbcatalogue.DBCatalogue;
 import net.sf.jsqlparser.schema.Table;
 
+import java.io.File;
+
 public class DuplicateEliminationOperatorTest {
     public static void main(String[] args) {
         System.out.println("Running DuplicateEliminationOperator Tests...");
 
         // Set up database catalogue and table
-        String schemaDirectory = "samples";  // Ensure correct schema directory
+        String schemaDirectory = "samples" + File.separator + "db";  // Ensure correct schema directory
         DBCatalogue dbCatalogue = new DBCatalogue(schemaDirectory);
         Table table = new Table("Student");
 
@@ -32,6 +34,8 @@ public class DuplicateEliminationOperatorTest {
         while ((tuple = deOperator.getNextTuple()) != null) {
             System.out.println("Unique Tuple: " + tuple);
         }
+
+        // correct if it skipped the duplicate values
 
         // Reset and test again
         System.out.println("Testing reset() method...");

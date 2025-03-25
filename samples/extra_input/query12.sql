@@ -1,1 +1,1 @@
-SELECT SUM(1), SUM(Student.A) FROM Student, Enrolled;
+SELECT * FROM Enrolled, Course, Student WHERE Course.E = Enrolled.E AND Enrolled.A=Student.A AND Course.E>10;

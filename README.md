@@ -61,8 +61,8 @@ All the given testing queries, the output and the expected output as well as the
 
 <br>
 If you want to test other queries you can use the following command
+
 ```bash
-$ java -jar target/database_systems-1.0.0-jar-with-dependencies.jar
+java -jar target/database_systems-1.0.0-jar-with-dependencies.jar \
 samples/db samples/input/query1.sql samples/output/query1.csv
-```
 

@@ -53,7 +53,7 @@ Some of the optimizations being done (1 and 2) can be found here.
 `visitor`: contains expression visitor to evaluate conditions <br>
 
 2. Within the `src/test`: <br>
-Tests for each operator that I have implemented and used in the project (unit tests required by assignment), dbcatalogue and the tests for each query given in BlazeDBTest. The operators tests were done initially for bug debugging having as a child the scan operator.
+Tests for each operator that I have implemented and used in the project (unit tests required by assignment), dbcatalogue and the tests for each query given in datbase. The operators tests were done initially for bug debugging having as a child the scan operator.
 Further testing was also done with a set of other queries to test the optimizations but also more complex and tricky queries. These queries can be found under `samples\extra_input`
 
 2. Within `samples` <br>

@@ -18,7 +18,7 @@ This step-by-step approach ensures an optimized and structured query execution. 
 
 
 # Optimizations
-## 1.Selection Pushdown Optimization <br>
+## 1. Selection Pushdown Optimization <br>
 The goal was to filter data as early as possible to avoid processing unnecessary rows in later operations. This was the most impactful optimization especially in more complex queries. Firstly, the `WHERE` clause is analyzed, and conditions are extracted using QueryOptimizer.extractConditions(whereExpression).  Conditions are categorized into:
 - Single-table conditions: Applied immediately after scanning the relevant table using SelectOperator. A list of these conditions is maintained, and when a table is read, selection is activated using only the applicable conditions. If conditions apply only to a single table, they are merged using QueryOptimizer.mergeConditions(baseTableConditions) and applied before joins.
 - Multi-table conditions: Deferred and applied during JoinOperator.
@@ -27,15 +27,15 @@ This significantly reduces the number of rows processed in joins and aggregation
 
 Note: Importantly, trivial conditions involving LongValues (such as 1<2 or 2=1) are pushed to the BaseTable conditions (evaluated as in SingleTable) to ensure that they are applied as early as possible (Especially if the condition is False, this is very beneficial.)
 
-## 2.Early Projection Optimization
+## 2. Early Projection Optimization
 
 The goal was to reduce data size early by selecting only necessary columns before processing joins and filters. While this can slightly improve computation time by speeding up joins and filtering, its primary benefit is reducing memory usage during query execution, as we would have less columns to process through the operators. Before executing the query, we check if early projection is feasible; otherwise, projection is applied at the end (before duplicate elimination). To simplify implementation, early projection is only done when: the SELECT statement does not include SELECT *; the query does not contain aggregate functions on columns, multiple columns from different tables are not used (otherwise, filtering would need to be deferred until scanning each table and have multiple `project` operators). The feasibility check occurs when collecting all columns required for GROUP BY, ORDER BY, and JOIN to see if SELECT contains all of them. If so, early projection is applied using a ProjectOperator immediately after scanning the base table (ScanOperator). It is correct do so, because those columns we will discard will not be used in the computation anyway.
 
-## 3.Join Order Optimization Using Database Statistics
+## 3. Join Order Optimization Using Database Statistics
 To optimize multi-table queries, join order is determined dynamically based on both correctness and estimated cost. The join order always starts with the base table (mandatory scan) from the FROM clause. Subsequent joins are chosen to form a valid chain — each new table must be connected to the already scanned tables via a join condition. This process resembles traversing a join graph. When multiple join options are available, we estimate their selectivity using precomputed statistics (min, max, distinct count, tuple count) stored in `DBStatistics`. For  joins, the selectivity is approximated as 1 / max(distinctCount(columnA), distinctCount(columnB)), as heurtistically we assume the equality join. The join with the highest selectivity (i.e., lowest expected output) is chosen to minimize intermediate result size. This reduces the cost of join processing, especially in queries with multiple tables, by avoiding large intermediate outputs and improving efficiency. This is valid because the join order does not matter. This minimizes intermediate result sizes and improves performance. The logic can be extended to support other condition types (e.g., range joins like A.x > B.y) by incorporating additional statistics such as value distributions or histograms, but since our data in this case were limited, this was not added. The DBstatistics class has the code to compute all these metrics. Also this can also be extended to compute the optimal order without having the contraint as using the FromItem as the base table, which could be more optimal
 
 
-## DBStatistics
+## 4. DBStatistics
 For future use, the code to extract key information from a table has been written here. For every column in the table, the following statistics are computed: the min, max , distinct and total values. The plan was to optimize the order join by allowing the joins with highest selectivity to be chosen first, in order to minimize the output and speed the process. Again this is valid because the order of the joins does not matter.
 
 
@@ -61,7 +61,7 @@ All the given testing queries, the output and the expected output as well as the
 
 <br>
 If you want to test other queries you can use the following command
-```
+```bash
 $ java -jar target/database_systems-1.0.0-jar-with-dependencies.jar
 samples/db samples/input/query1.sql samples/output/query1.csv
 ```
